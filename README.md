@@ -27,7 +27,7 @@ Within the Python ecosystem, there are a handful of [different task queues](http
 ## Usage
 Requesting a new image to be resized:
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{"original_url": "http://0.0.0.0:8000/fuji.jpeg"}' http://localhost:5000/v1/thumbnails
+curl -X POST -H "Content-Type: application/json" -d '{"url": "http://0.0.0.0:8000/fuji.jpeg"}' http://localhost:5000/v1/thumbnails
 ```
 
 Checking status of an image:
