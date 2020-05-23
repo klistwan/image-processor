@@ -2,13 +2,19 @@ import uuid
 
 import flask
 from flask import request, jsonify
+from redis import Redis
+from rq import Queue
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Thumbnail
 
 from app import app
+from models import Thumbnail
+from worker import generate_thumbnail
 
 engine = create_engine('sqlite:///image_processor.db', echo=True)
+
+# Open a connection to your Redis server.
+q = Queue(connection=Redis())
 
 @app.route('/v1/thumbnails', methods=['POST'])
 def add_thumbnail_request():
@@ -25,6 +31,7 @@ def add_thumbnail_request():
     session.add(new_thumbnail)
     session.commit()
 
+    q.enqueue(generate_thumbnail, args=(tid, new_thumbnail.original_url,))
     # Respond back to the user.
     return jsonify(new_thumbnail), 201
 
