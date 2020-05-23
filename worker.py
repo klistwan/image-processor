@@ -3,20 +3,23 @@ import os
 import requests
 import shutil
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from models import Thumbnail
+
 from flask import Flask, abort, request, jsonify, Response
 from PIL import Image
 
-app = Flask(__name__)
-app.config["DEBUG"] = True
+engine = create_engine('sqlite:///image_processor.db', echo=True)
 
-def download_image(url):
+def _download_image(url):
 	response = requests.get(url, stream=True)
 	with open('temporary.jpeg', 'wb') as out_file:
 		shutil.copyfileobj(response.raw, out_file)
 	del response
 	return 'temporary.jpeg'
 
-def resize(filepath):
+def _create_thumbnail(filepath):
 	image = Image.open(filepath)
 	image.thumbnail((100,100))
 	new_url = "thumbnail.jpg"
@@ -24,14 +27,15 @@ def resize(filepath):
 	os.remove(filepath)
 	return new_url
 
-def main():
-	response = requests.get(request.json['url'], stream=True)
-	if response.status_code == 404:
-		error_message = json.dumps({'Message': 'Photo not found.'})
-		abort(Response(error_message, 404))
-	# Download image.
-	local_url = download_image(request.json['url'])
-	resized_url = resize(local_url)
-	return jsonify({'url': resized_url}, 201)
-
-
+def generate_thumbnail(id, url):
+	# First, download the image from the given url.
+	local_url = _download_image(url)
+	# Next, resize the image and get its new URL.
+	resized_url = _create_thumbnail(local_url)
+	# Update the database.
+	Session = sessionmaker(bind=engine)
+    session = Session()
+    result = session.query(Thumbnail).get(id)
+    result.resized_url = resized_url
+    session.commit()
+    return resized_url
