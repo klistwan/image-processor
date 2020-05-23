@@ -1,12 +1,19 @@
 from app import db
+from dataclasses import dataclass
+import datetime
 
-
+@dataclass
 class Thumbnail(db.Model):
     __tablename__ = "thumbnails"
 
+    id: int
+    original_url: str
+    resized_url: str
+    status: str
+
     id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.Date, nullable=False)
-    updated_at = db.Column(db.Date)
+    created_at = db.Column(db.Date, default=datetime.datetime.utcnow)
+    updated_at = db.Column(db.Date, onupdate=datetime.datetime.now)
     original_url = db.Column(db.String(100), nullable=False)
     resized_url = db.Column(db.String(100))
     status = db.Column(db.Enum('queued','completed','failed'), nullable=False, server_default='queued')

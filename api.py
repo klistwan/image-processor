@@ -1,41 +1,37 @@
-import json
-import os
-import requests
-import shutil
+import flask
+from flask import request, jsonify
 
-from flask import Flask, abort, request, jsonify, Response
-from PIL import Image
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from models import Thumbnail
 
-app = Flask(__name__)
-app.config["DEBUG"] = True
+from app import app
 
-def download_image(url):
-	response = requests.get(url, stream=True)
-	with open('temporary.jpeg', 'wb') as out_file:
-		shutil.copyfileobj(response.raw, out_file)
-	del response
-	return 'temporary.jpeg'
+engine = create_engine('sqlite:///image_processor.db', echo=True)
 
-def resize(filepath):
-	image = Image.open(filepath)
-	image.thumbnail((100,100))
-	new_url = "thumbnail.jpg"
-	image.save(new_url)
-	os.remove(filepath)
-	return new_url
+@app.route('/v1/thumbnails', methods=['POST'])
+def add_thumbnail_request():
+    if 'url' not in request.get_json():
+        return "Error: No url provided. Please specify a url.", 422
 
-@app.route('/images', methods=['POST'])
-def home():
-	if not request.json or not 'url' in request.json:
-		abort(400)
-	response = requests.get(request.json['url'], stream=True)
-	if response.status_code == 404:
-		error_message = json.dumps({'Message': 'Photo not found.'})
-		abort(Response(error_message, 404))
-	# Download image.
-	local_url = download_image(request.json['url'])
-	resized_url = resize(local_url)
-	return jsonify({'url': resized_url}, 201)
+    original_url = request.args.get('url')
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    # Create a new thumbnail request.
+    new_thumbnail = Thumbnail(request.get_json()['url'])
+    session.add(new_thumbnail)
+    session.commit()
+    return jsonify(new_thumbnail), 201
 
 
-app.run()
+@app.route('/v1/thumbnails', methods=['GET'])
+def get_thumbnail():
+    thumbnail_id = request.args.get('id')
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    result = session.query(Thumbnail).filter(Thumbnail.id==thumbnail_id)
+    return jsonify(result.first())
+
+if __name__ == '__main__':
+    app.run()
