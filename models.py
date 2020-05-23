@@ -6,19 +6,20 @@ import datetime
 class Thumbnail(db.Model):
     __tablename__ = "thumbnails"
 
-    id: int
+    id: str
     original_url: str
     resized_url: str
     status: str
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(36), primary_key=True)
     created_at = db.Column(db.Date, default=datetime.datetime.utcnow)
     updated_at = db.Column(db.Date, onupdate=datetime.datetime.now)
     original_url = db.Column(db.String(100), nullable=False)
     resized_url = db.Column(db.String(100))
     status = db.Column(db.Enum('queued','completed','failed'), nullable=False, server_default='queued')
 
-    def __init__(self, original_url):
+    def __init__(self, uuid, original_url):
+        self.id = uuid
         self.original_url = original_url
 
     def __repr__(self):
