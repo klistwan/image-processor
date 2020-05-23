@@ -3,17 +3,20 @@ import os
 import requests
 import shutil
 
+from flask import Flask, abort, request, jsonify, Response
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Thumbnail
-
-from flask import Flask, abort, request, jsonify, Response
 from PIL import Image
+
+from models import Thumbnail
 
 engine = create_engine('sqlite:///image_processor.db', echo=True)
 
 def _download_image(url):
-	response = requests.get(url, stream=True)
+	try:
+		response = requests.get(url, stream=True, timeout=(2, 5))
+	except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+		return None
 	with open('temporary.jpeg', 'wb') as out_file:
 		shutil.copyfileobj(response.raw, out_file)
 	del response
@@ -28,14 +31,20 @@ def _create_thumbnail(filepath):
 	return new_url
 
 def generate_thumbnail(id, url):
-	# First, download the image from the given url.
-	local_url = _download_image(url)
-	# Next, resize the image and get its new URL.
-	resized_url = _create_thumbnail(local_url)
-	# Update the database.
+	# Query the DB to get this thumbnail request.
 	Session = sessionmaker(bind=engine)
-    session = Session()
-    result = session.query(Thumbnail).get(id)
-    result.resized_url = resized_url
-    session.commit()
-    return resized_url
+	session = Session()
+	result = session.query(Thumbnail).get(id)
+
+	# Try to download the image.
+	local_url = _download_image(url)
+	if local_url:
+		# If successful, resize.
+		resized_url = _create_thumbnail(local_url)
+		result.resized_url = resized_url
+	else:
+		# If not, mark this request as failed.
+		result.status = 'failed'
+
+	session.commit()
+	#return jsonify(result)
