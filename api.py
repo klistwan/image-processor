@@ -1,6 +1,7 @@
+import uuid
+
 import flask
 from flask import request, jsonify
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models import Thumbnail
@@ -19,9 +20,12 @@ def add_thumbnail_request():
     session = Session()
 
     # Create a new thumbnail request.
-    new_thumbnail = Thumbnail(request.get_json()['url'])
+    tid = str(uuid.uuid4())
+    new_thumbnail = Thumbnail(tid, request.get_json()['url'])
     session.add(new_thumbnail)
     session.commit()
+
+    # Respond back to the user.
     return jsonify(new_thumbnail), 201
 
 
