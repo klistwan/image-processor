@@ -4,13 +4,14 @@ ENV FLASK_APP api.py
 ENV FLASK_RUN_HOST 0.0.0.0
 ENV REDIS_HOST redis
 
+COPY requirements.txt .
+
 RUN apk --update add \
     build-base \
     jpeg-dev \
-    zlib-dev
+    zlib-dev && \
+    pip install -r requirements.txt
 
-# Add the dependencies to the container and install the python dependencies
-ADD requirements.txt /tmp/requirements.txt
-RUN pip install -r /tmp/requirements.txt
 COPY . .
-CMD ["flask", "run"]
+
+CMD ["python", "app.py"]
