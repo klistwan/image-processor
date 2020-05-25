@@ -1,6 +1,7 @@
-from app import db
 from dataclasses import dataclass
 import datetime
+
+from app import db
 
 @dataclass
 class Thumbnail(db.Model):
@@ -16,7 +17,7 @@ class Thumbnail(db.Model):
     updated_at = db.Column(db.Date, onupdate=datetime.datetime.now)
     original_url = db.Column(db.String(100), nullable=False)
     resized_url = db.Column(db.String(100))
-    status = db.Column(db.Enum('queued','completed','failed'), nullable=False, server_default='queued')
+    status = db.Column(db.Enum('queued','completed','failed'), nullable=False, default='queued')
 
     def __init__(self, uuid, original_url):
         self.id = uuid
