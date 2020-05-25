@@ -1,1 +1,6 @@
-Pillow==7.1.2
+Flask==1.1.2
+Flask-SQLAlchemy==2.4.1
+Pillow==6.2.2
+redis==3.5.2
+requests==2.23.0
+rq==1.4.1
