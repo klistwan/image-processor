@@ -34,10 +34,11 @@ For this project, even though there weren't requirements for transactions, stric
 ## Usage
 Requesting a new image to be resized:
 ```bash
-curl -X POST -H "Content-Type: application/json" -d '{"url": "http://0.0.0.0:8000/fuji.jpeg"}' http://localhost:5000/v1/thumbnails
+$ curl -X POST -H "Content-Type: application/json" -d '{"url": "https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg"}' http://localhost:5000/v1/thumbnails
+{"id":"96b725d0-14f5-48b7-b8b1-2182219fbf06","status":"queued","url":"https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg"}
 ```
 
 Checking status of an image:
 ```bash
-curl http://127.0.0.1:5000/v1/thumbnails?id=2
+curl http://127.0.0.1:5000/v1/thumbnails?id=96b725d0-14f5-48b7-b8b1-2182219fbf06
 ```

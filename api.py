@@ -1,50 +1,46 @@
+import json
 import os
 import uuid
 
-import flask
-from flask import request, jsonify
+from flask import Flask, request, jsonify
 from redis import Redis
 from rq import Queue
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from app import app
-from models import Thumbnail
 from worker import generate_thumbnail
 
-engine = create_engine('sqlite:///image_processor.db')
-
-# Open a connection to your Redis server.
 redis_conn = Redis(host=os.environ['REDIS_HOST'], port=6379)
 q = Queue(connection=redis_conn)
 
 @app.route('/v1/thumbnails', methods=['POST'])
 def add_thumbnail_request():
-    if 'url' not in request.get_json():
-        return "Error: No url provided. Please specify a url.", 422
-
-    original_url = request.args.get('url')
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    if 'url' not in request.json:
+        return jsonify("Error: No url provided. Please specify a url."), 422
 
     # Create a new thumbnail request.
-    tid = str(uuid.uuid4())
-    new_thumbnail = Thumbnail(tid, request.get_json()['url'])
-    session.add(new_thumbnail)
-    session.commit()
+    thumbnail = request.json
+    thumbnail['id'] = str(uuid.uuid4())
+    thumbnail['status'] = 'queued'
+    redis_conn.set(thumbnail['id'], json.dumps(thumbnail))
 
-    q.enqueue(generate_thumbnail, args=(tid, new_thumbnail.original_url,))
+    # Enqueue it.
+    q.enqueue(generate_thumbnail, args=(thumbnail['id'], ))
+
     # Respond back to the user.
-    return jsonify(new_thumbnail), 201
+    return jsonify(thumbnail), 201
 
 
 @app.route('/v1/thumbnails', methods=['GET'])
 def get_thumbnail():
-    thumbnail_id = request.args.get('id')
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    result = session.query(Thumbnail).filter(Thumbnail.id==thumbnail_id)
-    return jsonify(result.first())
+    tid = request.args.get('id', '')
+    import pdb; pdb.set_trace()
+    thumbnail = redis_conn.get(tid)
+    if not thumbnail:
+        message = {'status': 404, 'message': f"Thumbnail {tid} not found"}
+        resp = jsonify(message)
+        resp.status_code = 404
+        return resp
+    return thumbnail, 201
 
 if __name__ == '__main__':
     app.run()

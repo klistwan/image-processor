@@ -3,48 +3,46 @@ import os
 import requests
 import shutil
 
-from flask import Flask, abort, request, jsonify, Response
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from flask import Flask, request, jsonify
+from redis import Redis
 from PIL import Image
 
-from models import Thumbnail
+from app import app
+redis_conn = Redis(host=os.environ['REDIS_HOST'], port=6379)
 
-engine = create_engine('sqlite:///image_processor.db', echo=True)
 
-def _download_image(url):
-	try:
-		response = requests.get(url, stream=True, timeout=(2, 5))
-	except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-		return None
-	with open('temporary.jpeg', 'wb') as out_file:
-		shutil.copyfileobj(response.raw, out_file)
-	del response
-	return 'temporary.jpeg'
+class ThumbnailGenerator():
+	def __init__(self, **entries):
+		self.__dict__.update(entries)
 
-def _create_thumbnail(filepath):
-	image = Image.open(filepath)
-	image.thumbnail((100,100))
-	new_url = "thumbnail.jpg"
-	image.save(new_url)
-	os.remove(filepath)
-	return new_url
+	def local_url(self):
+		return f"{self.id}.jpeg"
 
-def generate_thumbnail(id, url):
-	# Query the DB to get this thumbnail request.
-	Session = sessionmaker(bind=engine)
-	session = Session()
-	result = session.query(Thumbnail).get(id)
+	def download_image(self):
+		try:
+			response = requests.get(self.url, stream=True, timeout=(2, 5))
+		except Exception as e:
+			self.status = 'failed'
+			self.error_message = e.__str__()
+			return False
+		with open(self.local_url(), 'wb') as out_file:
+			shutil.copyfileobj(response.raw, out_file)
+		del response
+		return True
 
-	# Try to download the image.
-	local_url = _download_image(url)
-	if local_url:
-		# If successful, resize.
-		resized_url = _create_thumbnail(local_url)
-		result.resized_url = resized_url
-	else:
-		# If not, mark this request as failed.
-		result.status = 'failed'
+	def resize(self):
+		if self.status == 'failed':
+			return
+		image = Image.open(self.local_url())
+		image.thumbnail((100,100))
+		image.save(self.local_url())
+		self.resized_url = self.local_url()
+		self.status = 'completed'
+		return True
 
-	session.commit()
-	#return jsonify(result)
+def generate_thumbnail(tid):
+	thumbnail = json.loads(redis_conn.get(tid))
+	generator = ThumbnailGenerator(**thumbnail)
+	generator.download_image()
+	generator.resize()
+	redis_conn.set(tid, json.dumps(generator.__dict__))
