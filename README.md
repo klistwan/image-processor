@@ -24,6 +24,13 @@ Within the Python ecosystem, there are a handful of [different task queues](http
 - [Huey](https://github.com/coleifer/huey) - a lightweight redis-based queue with flexible scheduling
 - [Dramatiq](https://github.com/Bogdanp/dramatiq) - fast, reliable alternative to Celery with RabbitMQ/Redis as brokers.
 
+Since each task queue offers its own set of features and functionality, it'd be worthwhile to do further research depending on our use case (and potential use cases) to determine the right one to use. In a real-life setting, it also may be worth prototyping proof of concepts (POCs) with each one during evaluation.
+
+To be pragmatic for this project, I opted for Redis Queue given its claims on being simpler and more lightweight than Celery.
+
+## Database Choice
+For this project, even though there weren't requirements for transactions, strict schema, complex joins, I decided to go with SQLite. It's easy to use and simple to setup, but in a real-life scenario, if we're more concerned with high availability than strong consistency, it may be worthwhile to explore a NoSQL type database.
+
 ## Usage
 Requesting a new image to be resized:
 ```bash
