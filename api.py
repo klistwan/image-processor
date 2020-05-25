@@ -1,3 +1,4 @@
+import os
 import uuid
 
 import flask
@@ -11,10 +12,11 @@ from app import app
 from models import Thumbnail
 from worker import generate_thumbnail
 
-engine = create_engine('sqlite:///image_processor.db', echo=True)
+engine = create_engine('sqlite:///image_processor.db')
 
 # Open a connection to your Redis server.
-q = Queue(connection=Redis())
+redis_conn = Redis(host=os.environ['REDIS_HOST'], port=6379)
+q = Queue(connection=redis_conn)
 
 @app.route('/v1/thumbnails', methods=['POST'])
 def add_thumbnail_request():
