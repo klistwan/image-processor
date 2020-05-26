@@ -31,7 +31,6 @@ class ThumbnailGenerator():
 		with open(self.local_url(), 'wb') as out_file:
 			shutil.copyfileobj(response.raw, out_file)
 		del response
-		return True
 
 	def resize(self):
 		if self.status == 'failed':
@@ -41,7 +40,6 @@ class ThumbnailGenerator():
 		image.save(self.local_url())
 		self.resized_url = f"{FLASK_HOST_AND_PORT}/{self.local_url()}"
 		self.status = 'completed'
-		return True
 
 def generate_thumbnail(tid):
 	thumbnail = json.loads(redis_conn.get(tid))

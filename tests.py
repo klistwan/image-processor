@@ -1,22 +1,27 @@
 import json
+import os
 import unittest
 from unittest.mock import patch
 
-from api import app
+from PIL import Image
+
+import api
+import worker
 
 class APITestCase(unittest.TestCase):
 	def setUp(self):
 		self.image_url = "https://www.fullstackpython.com/img/logos/flask.jpg"
+
 	def test_get_invalid_thumbnail(self):
-		fake_tid = 1
-		response = app.test_client().get(f"/v1/thumbnails?id={fake_tid}")
+		fake_tid = 123456789
+		response = api.app.test_client().get(f"/v1/thumbnails?id={fake_tid}")
 		self.assertEqual(response.status_code, 404)
 		json_response = json.loads(response.data)
 		self.assertEqual(json_response['status'], 404)
 		self.assertEqual(json_response['message'], f"Thumbnail {fake_tid} not found")
 
 	def test_add_thumbnail_request(self):
-		response = app.test_client().post(
+		response = api.app.test_client().post(
 			'/v1/thumbnails',
 			data=json.dumps({'url': self.image_url}),
 			content_type='application/json',
@@ -30,9 +35,28 @@ class APITestCase(unittest.TestCase):
 	def test_valid_thumbnail(self, mock_redis_get):
 		real_id = '12345'
 		mock_redis_get.return_value = {'id': real_id, 'url': self.image_url}
-		response = app.test_client().get(f"/v1/thumbnails?id={real_id}")
+		response = api.app.test_client().get(f"/v1/thumbnails?id={real_id}")
 		json_response = json.loads(response.data)
 		self.assertEqual(json_response['url'], self.image_url)
+
+
+class WorkerTestCase(unittest.TestCase):
+	def setUp(self):
+		self.image_url = "https://www.fullstackpython.com/img/logos/flask.jpg"
+		self.real_id = "96b725d0-14f5-48b7-b8b1-2182219fbf06"
+		self.filepath = f"static/{self.real_id}.jpeg"
+
+	def test_resize(self):
+		# TODO: Turn this integration-like unit test into a proper deterministic unit test mocking HTTP calls.
+		generator = worker.ThumbnailGenerator(**{'id': self.real_id, 'url': self.image_url, 'status': 'queued'})
+		generator.download_image()
+		generator.resize()
+		self.assertEqual(generator.status, 'completed')
+		with Image.open(generator.local_url()) as img:
+		    self.assertTrue(100 in img.size)
+
+	def tearDown(self):
+		os.remove(self.filepath)
 
 
 if __name__ == '__main__':
