@@ -5,6 +5,8 @@ services:
     command: python api.py
     ports:
       - "5000:5000"
+    volumes:
+      - static-content:/static
   redis:
     image: "redis:alpine"
   rq_worker:
@@ -12,3 +14,8 @@ services:
     command: rq worker -u redis://redis:6379
     depends_on:
       - redis
+    volumes:
+      - static-content:/static
+
+volumes:
+  static-content:
