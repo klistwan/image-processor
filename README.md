@@ -69,6 +69,7 @@ To keep this project small in scope, there are a few technical decisions I made 
 - Once we reach a certain volume of API requests, a single API server won't be able to handle the load. At that point, it may be worthwhile to scale the API server horizontally and potentially add a load balancer in front to distribute the load evenly.
 - Depending on any SLAs that our service has committed to, we'll need to add metrics monitoring (e.g. Datadaog) so we can track various metrics (e.g. p99 time to generate a thumbnail) and be alerted if there is slowdown or our service is breaking our SLA.
 - In the current implementation, a single queue is used. If we want to offer multiple priority levels, or perhaps offer high-priority for single requests and low-priority for batch requests, it would make sense to use multiple queues. We would also be able to scale up the workers per queue.
+- The testing added to this project was definitely on the light side. Currently, the worker logic and API server are a bit tightly coupled, and it would be worthwhile to separate the two further out to make adding individual unit tests easier. Furthermore, there's opportunity to do integration testing (e.g. build a staging environment to test the thumbnail generation pipeline) and system testing (e.g. stress testing, performance testing, load testing) before releasing the service.
 
 ## How to Run Tests and Use
 To build and start the project, from the project root:
