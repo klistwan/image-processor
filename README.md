@@ -4,14 +4,14 @@ The goal of this project was to create a JSON-based REST API service to resize i
 To support a large number of requests, it uses queue-based workers to asynchronously generate the thumbnails. The client is able to poll the API to check the status of the generation and retrieve the URL of the generated thumbnail.
 
 ## Architecture & Design Decisions
-![architecture diagram](images/architecture_diagram.jpg)
-
 This service's components are:
 - A Flask API server that handles client requests to generate new thumbnails and retrieve old ones
 - A Redis key-value store to serve as a database that captures request information
 - A Redis job queue to enqueue new thumbnail generation requests for the workers
 - Workers that read from the Redis job queue, generate thumbnails to an image storage location, and update the Redis key-value store
 - Image storage (the API service can also serve thumbnails from this)
+
+![architecture diagram](images/architecture_diagram.jpg)
 
 The Flask API offers versioning and its usage is very simple:
 - GET `/v1/thumbnails?id=1` retrieves information about a given thumbnail (in this case, thumbnail with ID = 1)
