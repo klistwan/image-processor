@@ -2,7 +2,7 @@ import json
 import os
 import uuid
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from redis import Redis
 from rq import Queue
 
@@ -11,6 +11,7 @@ from worker import generate_thumbnail
 
 redis_conn = Redis(host=os.environ['REDIS_HOST'], port=6379)
 q = Queue(connection=redis_conn)
+
 
 @app.route('/v1/thumbnails', methods=['POST'])
 def add_thumbnail_request():
@@ -33,7 +34,6 @@ def add_thumbnail_request():
 @app.route('/v1/thumbnails', methods=['GET'])
 def get_thumbnail():
     tid = request.args.get('id', '')
-    import pdb; pdb.set_trace()
     thumbnail = redis_conn.get(tid)
     if not thumbnail:
         message = {'status': 404, 'message': f"Thumbnail {tid} not found"}
@@ -42,5 +42,11 @@ def get_thumbnail():
         return resp
     return thumbnail, 201
 
+
+@app.route('/<path:filename>')
+def send_file(filename):
+    return send_from_directory(app.static_folder, filename)
+
+
 if __name__ == '__main__':
-    app.run()
+    app.run(host=os.environ['FLASK_RUN_HOST'])

@@ -8,7 +8,10 @@ from redis import Redis
 from PIL import Image
 
 from app import app
+import settings
+
 redis_conn = Redis(host=os.environ['REDIS_HOST'], port=6379)
+FLASK_HOST_AND_PORT = os.environ['FLASK_RUN_HOST'] + ":" + os.environ['FLASK_PORT']
 
 
 class ThumbnailGenerator():
@@ -16,7 +19,7 @@ class ThumbnailGenerator():
 		self.__dict__.update(entries)
 
 	def local_url(self):
-		return f"{self.id}.jpeg"
+		return f"{settings.STATIC_FOLDER}/{self.id}.jpeg"
 
 	def download_image(self):
 		try:
@@ -36,7 +39,7 @@ class ThumbnailGenerator():
 		image = Image.open(self.local_url())
 		image.thumbnail((100,100))
 		image.save(self.local_url())
-		self.resized_url = self.local_url()
+		self.resized_url = f"{FLASK_HOST_AND_PORT}/{self.local_url()}"
 		self.status = 'completed'
 		return True
 

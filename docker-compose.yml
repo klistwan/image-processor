@@ -2,6 +2,7 @@ version: '3'
 services:
   web:
     image: image_processor:latest
+    command: python api.py
     ports:
       - "5000:5000"
   redis:

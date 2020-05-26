@@ -1,3 +1,5 @@
 from flask import Flask
 
-app = Flask(__name__)
+import settings
+
+app = Flask(__name__, static_folder=settings.STATIC_FOLDER)
