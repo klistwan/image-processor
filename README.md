@@ -8,7 +8,7 @@ The Flask API application makes use of a Redis key-value store to store request 
 
 If needed, the client can poll the API endpoint and retrieve status of the thumbnail generation request.
 
-![Optional Text](images/api_request_workflow.jpg)
+![api request workflow](images/api_request_workflow.jpg)
 
 ## Image Processing Libraries
 There are many Python libraries that offer image processing functionality:
