@@ -27,7 +27,7 @@ class ThumbnailGenerator():
 		except Exception as e:
 			self.status = 'failed'
 			self.error_message = e.__str__()
-			return False
+			return
 		with open(self.local_url(), 'wb') as out_file:
 			shutil.copyfileobj(response.raw, out_file)
 		del response

@@ -53,10 +53,14 @@ class WorkerTestCase(unittest.TestCase):
 		generator.resize()
 		self.assertEqual(generator.status, 'completed')
 		with Image.open(generator.local_url()) as img:
-		    self.assertTrue(100 in img.size)
-
-	def tearDown(self):
+			self.assertTrue(100 in img.size)
 		os.remove(self.filepath)
+
+	def test_invalid_resize(self):
+		generator = worker.ThumbnailGenerator(**{'url': "http://notawebsite.ca/fake.jpg", 'status': 'queued'})
+		generator.download_image()
+		self.assertEqual(generator.status, 'failed')
+
 
 
 if __name__ == '__main__':
