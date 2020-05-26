@@ -1,3 +1,15 @@
+## Workflow 
+The Flask API application makes use of a Redis key-value store to store request information, and enqueues thumbnail generation requests via Redis Queue.
+
+1. Client makes a POST request to generate a new thumbnail
+2. The Flask API server stores the request information in Redis and enqueues it onto a Redis Queue
+3. Available workers retrieve the request's information from Redis, generate a thumbnail, and update Redis
+4. Client makes a GET request to retrieve the URL of the thumbnail
+
+If needed, the client can poll the API endpoint and retrieve status of the thumbnail generation request.
+
+![Optional Text](images/api_request_workflow.jpg)
+
 ## Image Processing Libraries
 There are many Python libraries that offer image processing functionality:
 - [scikit-image](https://github.com/scikit-image/scikit-image) - 3.7k stars, last commit yesterday, 366 contributors
