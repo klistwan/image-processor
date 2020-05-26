@@ -82,18 +82,28 @@ $ docker-compose logs -f # tail the logs
 With the service now running, you can submit an image to be resized:
 ```bash
 $ curl -X POST -H "Content-Type: application/json" -d '{"url": "https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg"}' http://localhost:5000/v1/thumbnails
-{"id":"96b725d0-14f5-48b7-b8b1-2182219fbf06","status":"queued","url":"https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg"}
+{
+  "id": "b500d183-6d22-462a-a623-08fd94790482", 
+  "status": "queued", 
+  "url": "https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg"
+}
 ```
 
 After, you can check the status of your thumbnail generation:
 ```bash
-$ curl http://localhost:5000/v1/thumbnails?id=96b725d0-14f5-48b7-b8b1-2182219fbf06
-{"url": "https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg", "id": "96b725d0-14f5-48b7-b8b1-2182219fbf06", "status": "completed", "resized_url": "http://localhost:5000/static/96b725d0-14f5-48b7-b8b1-2182219fbf06.jpeg"}
+$ curl http://localhost:5000/v1/thumbnails?id=b500d183-6d22-462a-a623-08fd94790482
+{
+  "id": "b500d183-6d22-462a-a623-08fd94790482", 
+  "resized_url": "0.0.0.0:5000/static/b500d183-6d22-462a-a623-08fd94790482.jpeg", 
+  "status": "completed", 
+  "url": "https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg"
+}
 ```
 
 To get started on local development:
 
 1. Install requirements: `pip install -r requirements.txt`
-2. Run tests: `python tests.py`
-3. Start a local Redis server, `$ redis-server` and worker `$ rq worker`
-4. Start the API server `$ flask run`
+2. Add any necessary environment variables (see `Dockerfile`).
+3. Run tests: `python tests.py`
+4. Start a local Redis server, `$ redis-server` and worker `$ rq worker`
+5. Start the API server `$ flask run`

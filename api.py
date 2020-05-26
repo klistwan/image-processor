@@ -34,13 +34,12 @@ def add_thumbnail_request():
 @app.route('/v1/thumbnails', methods=['GET'])
 def get_thumbnail():
     tid = request.args.get('id', '')
-    thumbnail = redis_conn.get(tid)
-    if not thumbnail:
+    if not redis_conn.get(tid):
         message = {'status': 404, 'message': f"Thumbnail {tid} not found"}
         resp = jsonify(message)
         resp.status_code = 404
         return resp
-    return thumbnail, 200
+    return jsonify(json.loads(redis_conn.get(tid))), 200
 
 
 @app.route('/<path:filename>')

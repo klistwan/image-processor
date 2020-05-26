@@ -34,7 +34,7 @@ class APITestCase(unittest.TestCase):
 	@patch('api.redis_conn.get')
 	def test_valid_thumbnail(self, mock_redis_get):
 		real_id = '12345'
-		mock_redis_get.return_value = {'id': real_id, 'url': self.image_url}
+		mock_redis_get.return_value = json.dumps({'id': real_id, 'url': self.image_url})
 		response = api.app.test_client().get(f"/v1/thumbnails?id={real_id}")
 		json_response = json.loads(response.data)
 		self.assertEqual(json_response['url'], self.image_url)
