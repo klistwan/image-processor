@@ -34,10 +34,14 @@ class ThumbnailGenerator():
 		del response
 
 	def resize(self):
+		# Fail error if image failed to download.
 		if self.status == 'failed':
 			return
+		# TODO: Add error handling if image can't be opened.
 		image = Image.open(self.local_url())
+		# TODO: Decide what to do if submitted images are smaller than 100px by 100px.
 		image.thumbnail((100,100))
+		# TODO: Add error handling if saving image fails.
 		image.save(self.local_url())
 		self.resized_url = f"{FLASK_HOST_AND_PORT}/{self.local_url()}"
 		self.status = 'completed'

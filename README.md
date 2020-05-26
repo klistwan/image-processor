@@ -61,17 +61,17 @@ If needed, the client can poll the API endpoint and retrieve status of the thumb
 
 ## Potential Improvements
 To keep this project small in scope, there are a few technical decisions I made wouldn't scale if we wanted to release this service in production. Some of the areas that are worth revisiting are:
+- Validation and error handling. Currently, very little is being done so and a malicious actor could submit a URL to a very large file and cause the workers to crash.
 - Depending on our needs for strong consistency or high availability, we'd most likely want to replace our Redis key-value store with something less transient and more durable.
 - Depending on our read/write ratio of API requests, once we reach a certain scale where our database is hitting its limits, it may be fruitful to shard our database. For example, if our read/write ratio if 80/20, we may want to have a handful of read-only DBs and a single DB that allows writes.
-- We currently store all resized thumbnails indefinitely in a folder that's shared between the workers and the API server. It would be worthwhile to look at storing the resized thumbnails somewhere else (e.g. Amazon S3, Google Cloud Storage) and maybe adding some sort of expiry on each thumbnail (e.g. 30 days).
+- We currently store all resized thumbnails indefinitely in a folder that's shared between the workers and the API server. It would be worthwhile to look at storing the resized thumbnails somewhere else (e.g. Amazon S3, Google Cloud Storage) and maybe adding some sort of expiry on each thumbnail (e.g. 30 days). 
 - We should consider adding API authentication, rate limiting, and throttling to prevent bad actors from abusing the system.
 - Once we reach a certain volume of API requests, a single API server won't be able to handle the load. At that point, it may be worthwhile to scale the API server horizontally and potentially add a load balancer in front to distribute the load evenly.
 - Depending on any SLAs that our service has committed to, we'll need to add metrics monitoring (e.g. Datadaog) so we can track various metrics (e.g. p99 time to generate a thumbnail) and be alerted if there is slowdown or our service is breaking our SLA.
 - In the current implementation, a single queue is used. If we want to offer multiple priority levels, or perhaps offer high-priority for single requests and low-priority for batch requests, it would make sense to use multiple queues. We would also be able to scale up the workers per queue.
-- There is little error handling and no validation done that the URL corresponds to a valid, downloadable image. A malicious actor could submit a URL to a very large file and cause the workers to crash.
 
-## How to Run and Test
-From the project root: 
+## How to Run Tests and Use
+To build and start the project, from the project root:
 
 ```bash
 $ docker build -t image_processor:latest . # build the Docker image from the Dockerfile
@@ -79,14 +79,21 @@ $ docker-compose up -d # start the rq_worker, redis, and api containers in the b
 $ docker-compose logs -f # tail the logs
 ```
 
-Requesting a new image to be resized:
+With the service now running, you can submit an image to be resized:
 ```bash
 $ curl -X POST -H "Content-Type: application/json" -d '{"url": "https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg"}' http://localhost:5000/v1/thumbnails
 {"id":"96b725d0-14f5-48b7-b8b1-2182219fbf06","status":"queued","url":"https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg"}
 ```
 
-Checking status of an image:
+After, you can check the status of your thumbnail generation:
 ```bash
-$ curl http://localhost:5000/v1/thumbnails?id=4064d523-9903-4fd9-a471-2ae167a685bf
-{"url": "https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg", "id": "4064d523-9903-4fd9-a471-2ae167a685bf", "status": "completed", "resized_url": "http://localhost:5000/static/4064d523-9903-4fd9-a471-2ae167a685bf.jpeg"}
+$ curl http://localhost:5000/v1/thumbnails?id=96b725d0-14f5-48b7-b8b1-2182219fbf06
+{"url": "https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg", "id": "96b725d0-14f5-48b7-b8b1-2182219fbf06", "status": "completed", "resized_url": "http://localhost:5000/static/96b725d0-14f5-48b7-b8b1-2182219fbf06.jpeg"}
 ```
+
+To get started on local development:
+
+1. Install requirements: `pip install -r requirements.txt`
+2. Run tests: `python tests.py`
+3. Start a local Redis server, `$ redis-server` and worker `$ rq worker`
+4. Start the API server `$ flask run`
