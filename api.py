@@ -40,7 +40,7 @@ def get_thumbnail():
         resp = jsonify(message)
         resp.status_code = 404
         return resp
-    return thumbnail, 201
+    return thumbnail, 200
 
 
 @app.route('/<path:filename>')
