@@ -1,6 +1,6 @@
 version: '3'
 services:
-  web:
+  api:
     image: image_processor:latest
     command: python api.py
     ports:
