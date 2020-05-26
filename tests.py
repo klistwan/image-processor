@@ -44,7 +44,6 @@ class WorkerTestCase(unittest.TestCase):
 	def setUp(self):
 		self.image_url = "https://www.fullstackpython.com/img/logos/flask.jpg"
 		self.real_id = "96b725d0-14f5-48b7-b8b1-2182219fbf06"
-		self.filepath = f"static/{self.real_id}.jpeg"
 
 	def test_resize(self):
 		# TODO: Turn this integration-like unit test into a proper deterministic unit test mocking HTTP calls.
@@ -54,7 +53,7 @@ class WorkerTestCase(unittest.TestCase):
 		self.assertEqual(generator.status, 'completed')
 		with Image.open(generator.local_url()) as img:
 			self.assertTrue(100 in img.size)
-		os.remove(self.filepath)
+		os.remove(generator.local_url())
 
 	def test_invalid_resize(self):
 		generator = worker.ThumbnailGenerator(**{'url': "http://notawebsite.ca/fake.jpg", 'status': 'queued'})

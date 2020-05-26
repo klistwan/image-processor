@@ -19,7 +19,8 @@ class ThumbnailGenerator():
 		self.__dict__.update(entries)
 
 	def local_url(self):
-		return f"{settings.STATIC_FOLDER}/{self.id}.jpeg"
+		filetype = self.url.split('.')[-1]
+		return f"{settings.STATIC_FOLDER}/{self.id}.{filetype}"
 
 	def download_image(self):
 		try:
