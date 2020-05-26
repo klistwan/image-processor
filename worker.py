@@ -47,6 +47,7 @@ class ThumbnailGenerator():
 		self.status = 'completed'
 
 def generate_thumbnail(tid):
+	# TODO: Elminate this Redis call at the API level by submitting a job with the serialized request.
 	thumbnail = json.loads(redis_conn.get(tid))
 	generator = ThumbnailGenerator(**thumbnail)
 	generator.download_image()
