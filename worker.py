@@ -40,6 +40,7 @@ class ThumbnailGenerator():
 		# TODO: Add error handling if image can't be opened.
 		image = Image.open(self.local_url())
 		# TODO: Decide what to do if submitted images are smaller than 100px by 100px.
+		# TODO: Remove hard-coded sizes and make resize configurable.
 		image.thumbnail((100,100))
 		# TODO: Add error handling if saving image fails.
 		image.save(self.local_url())
