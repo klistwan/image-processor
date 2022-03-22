@@ -1,5 +1,5 @@
 Flask==1.1.2
-Pillow==9.0.0
+Pillow==9.0.1
 redis==3.5.2
 requests==2.23.0
 rq==1.4.1
